@@ -1,44 +1,45 @@
-# Rust
-/target
-/kingfisher_rust/target
-Cargo.lock
+# --- Rust ---
+# Ignore target directory in all sub-crates
+**/target/
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
+# --- Python ---
+# Virtual environments
 .venv/
 venv/
 ENV/
+**/.venv/
+**/venv/
+**/ENV/
+
+# Cache and compiled files
+**/__pycache__/
+**/*.py[cod]
+**/*$py.class
+*.so
+*.pyd
+
+# Packaging and distribution
 build/
-develop-eggs/
 dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
+**/dist/
+**/build/
 *.egg-info/
-.installed.cfg
+.eggs/
 *.egg
 MANIFEST
 
-# Maturin / Compiled extensions
-*.so
-*.pyd
-/python/kingfisher_rust/kingfisher_rust
+# uv lockfile (if preferred to ignore, but usually kept)
+# uv.lock
 
-# IDEs and OS
+# --- IDEs and OS ---
 .idea/
 .vscode/
 .DS_Store
 Thumbs.db
 
-# Test Data (Optional: keep if you want it in the repo)
-# test_data.txt
-# names.txt
+# --- Maturin / Compiled extensions ---
+# Ignore generated shared objects
+python/**/*.so
+python/**/*.pyd
+feature_selection_bnb/*.so
+kingfisher_rust/*.so
