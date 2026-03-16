@@ -49,17 +49,17 @@ Pruning occurs in two ways:
 
 ### Phase 2: First Use Case (Complete)
 - [x] Port Kingfisher's rule mining logic into the `SearchProblem` trait.
-- [x] Verify consistency with the original `kingfisher_rust` implementation.
+- [] Verify consistency with the original `kingfisher_rust` implementation.
 
 ### Phase 3: Strategy Expansion (Complete)
 - [x] Implement `DfsSolver` for memory-constrained searches.
 - [x] Implement `BestFirstSolver` for objective-driven optimization.
 
 ### Phase 4: Machine Learning Applications (Partial)
-- [x] **Feature Selection:** Implemented OLS/Ridge with AIC, BIC, R2, and RSS metrics.
+- [] **Feature Selection:** Implemented OLS/Ridge with AIC, BIC, R2, and RSS metrics.
 - [ ] **Graph Problems:** Implement Max-Clique or Shortest Path as a `SearchProblem`.
 
 ## Design Goals
 - **Zero-cost Abstractions:** Use Rust generics to ensure no runtime overhead for the trait system.
 - **Parallelism:** Leverage `rayon` for massive scale search spaces.
-- **Safety:** Ensure thread-safe state management during pruning.
+- **Safety:** Ensure thread-safe state management during pruning. **TODO:** Check dashmap vs rayon problem.
