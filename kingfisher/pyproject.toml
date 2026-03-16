@@ -17,8 +17,8 @@ dependencies = [
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
+module-name = "kingfisher_bnb.kingfisher_bnb_extension"
 python-source = "python"
-module-name = "kingfisher.kingfisher_bnb"
 
 [dependency-groups]
 dev = [

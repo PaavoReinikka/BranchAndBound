@@ -39,21 +39,21 @@ uv sync
 
 ### Example:
 ```python
-import kingfisher
+import kingfisher_bnb
 
 # 1. Start with dense data
 dense_data = [[1, 1, 0], [1, 0, 1], [0, 1, 1]]
-sparse_data, id_to_name, _ = kingfisher.dense_to_sparse(dense_data, ["Apple", "Banana", "Cherry"])
+sparse_data, id_to_name, _ = kingfisher_bnb.dense_to_sparse(dense_data, ["Apple", "Banana", "Cherry"])
 
 # 2. Find rules
-rules = kingfisher.find_rules_from_data(
+rules = kingfisher_bnb.find_rules_from_data(
     data=sparse_data,
     k=2,        # Max attribute index
     q=10,       # Top-K
     l_max=3,    # Max length
     t_type=3    # Both Pos and Neg
 )
-
+```
 # 3. Print with names
 for r in rules:
     ant = [id_to_name[i] for i in r.antecedent]

@@ -1,0 +1,23 @@
+[project]
+name = "bnb-framework"
+version = "0.1.0"
+description = "Generalized Branch and Bound Framework with Kingfisher and Feature Selection"
+requires-python = ">=3.8"
+dependencies = [
+    "numpy",
+    "scikit-learn",
+    "kingfisher-bnb",
+    "feature-selection-bnb",
+]
+
+[tool.uv.workspace]
+members = ["kingfisher", "feature_selection"]
+
+[tool.uv.sources]
+kingfisher-bnb = { workspace = true, editable = false }
+feature-selection-bnb = { workspace = true, editable = false }
+
+[dependency-groups]
+dev = [
+    "maturin>=1.12.6",
+]

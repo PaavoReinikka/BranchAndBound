@@ -45,8 +45,8 @@ cargo run -p kingfisher_bnb -- --data data/test_data.txt --cols 4 --t-type 3
 
 **Python:**
 ```python
-import kingfisher
-rules = kingfisher.find_rules_from_data(data=my_sparse_data, k=10, q=100)
+import kingfisher_bnb
+rules = kingfisher_bnb.find_rules_from_data(data=my_sparse_data, k=10, q=100)
 ```
 
 ### 2. Feature Selection
