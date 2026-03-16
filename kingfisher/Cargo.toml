@@ -1,0 +1,16 @@
+[package]
+name = "kingfisher_bnb"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "kingfisher_bnb"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+branch_and_bound = { path = "../branch_and_bound" }
+bitvec = "1.0"
+dashmap = "5.5"
+pyo3 = { version = "0.19", features = ["extension-module"] }
+parking_lot = "0.12"
+clap = { version = "4.4", features = ["derive"] }

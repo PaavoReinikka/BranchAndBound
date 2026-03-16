@@ -1,0 +1,26 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "kingfisher-bnb"
+version = "0.1.0"
+description = "Fast Kingfisher rule mining using parallel Branch and Bound search."
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [
+    { name = "Paavo" }
+]
+dependencies = [
+    "numpy",
+]
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
+python-source = "python"
+module-name = "kingfisher.kingfisher_bnb"
+
+[dependency-groups]
+dev = [
+    "maturin>=1.12.6",
+]
