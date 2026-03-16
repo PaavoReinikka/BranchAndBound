@@ -1,0 +1,44 @@
+# Rust
+/target
+/kingfisher_rust/target
+Cargo.lock
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Maturin / Compiled extensions
+*.so
+*.pyd
+/python/kingfisher_rust/kingfisher_rust
+
+# IDEs and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Test Data (Optional: keep if you want it in the repo)
+# test_data.txt
+# names.txt
