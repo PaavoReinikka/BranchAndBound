@@ -42,4 +42,7 @@ Thumbs.db
 python/**/*.so
 python/**/*.pyd
 feature_selection_bnb/*.so
-kingfisher_rust/*.so
+kingfisher/*.so
+
+# --- Data ---
+data/
