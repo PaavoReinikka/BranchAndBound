@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "branch_and_bound", "feature_selection",
+    "kingfisher",
+]
+resolver = "2"
