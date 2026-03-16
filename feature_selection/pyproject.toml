@@ -1,0 +1,27 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "feature-selection-bnb"
+version = "0.1.0"
+description = "Fast feature selection using parallel Branch and Bound search."
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [
+    { name = "Paavo" }
+]
+dependencies = [
+    "numpy",
+    "scikit-learn",
+]
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
+module-name = "feature_selection_bnb.feature_selection_extension"
+python-source = "python"
+
+[dependency-groups]
+dev = [
+    "maturin>=1.12.6",
+]

@@ -1,0 +1,15 @@
+[package]
+name = "feature_selection"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "feature_selection_extension"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+branch_and_bound = { path = "../branch_and_bound" }
+nalgebra = "0.32"
+bitvec = "1.0"
+rayon = "1.8"
+pyo3 = { version = "0.19", features = ["extension-module"] }
