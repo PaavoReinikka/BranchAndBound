@@ -53,7 +53,7 @@ rules = kingfisher_bnb.find_rules_from_data(
     l_max=3,    # Max length
     t_type=3    # Both Pos and Neg
 )
-```
+
 # 3. Print with names
 for r in rules:
     ant = [id_to_name[i] for i in r.antecedent]
