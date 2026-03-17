@@ -39,8 +39,8 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "feature-selection-bnb", directory = "feature_selection" },
-    { name = "kingfisher-bnb", directory = "kingfisher" },
+    { name = "feature-selection-bnb", editable = "feature_selection" },
+    { name = "kingfisher-bnb", editable = "kingfisher" },
     { name = "numpy" },
     { name = "scikit-learn" },
 ]
@@ -51,7 +51,7 @@ dev = [{ name = "maturin", specifier = ">=1.12.6" }]
 [[package]]
 name = "feature-selection-bnb"
 version = "0.1.0"
-source = { directory = "feature_selection" }
+source = { editable = "feature_selection" }
 dependencies = [
     { name = "numpy", version = "1.24.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "numpy", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
@@ -106,7 +106,7 @@ wheels = [
 [[package]]
 name = "kingfisher-bnb"
 version = "0.1.0"
-source = { directory = "kingfisher" }
+source = { editable = "kingfisher" }
 dependencies = [
     { name = "numpy", version = "1.24.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "numpy", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },

@@ -1,6 +1,7 @@
-use kingfisher_bnb::{KingfisherProblem, BitMatrix, Measures};
+use kingfisher_bnb_extension::{KingfisherProblem, BitMatrix, Measures};
 use branch_and_bound::solvers::BestFirstSolver;
 use std::path::Path;
+use std::sync::Arc;
 use clap::Parser;
 
 #[derive(Parser, Debug)]
@@ -66,7 +67,11 @@ fn main() {
     BestFirstSolver::search(&problem, args.top_k, args.alpha.ln());
     
     // Extract and print rules
-    let rules = std::sync::Arc::try_unwrap(problem.ruleset).unwrap().into_inner().unwrap().into_sorted_vec();
+    let rules_mutex = Arc::try_unwrap(problem.ruleset)
+        .expect("Failed to unwrap Arc")
+        .into_inner()
+        .expect("Failed to unlock Mutex");
+    let rules = rules_mutex.into_sorted_vec();
 
     for (i, rule) in rules.iter().enumerate() {
         let ant_str = format!("{:?}", rule.antecedent);

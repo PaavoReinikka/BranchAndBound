@@ -1,4 +1,4 @@
-use feature_selection::{FeatureProblem, FeatureMetric};
+use feature_selection_extension::{FeatureProblem, FeatureMetric};
 use branch_and_bound::solvers::BfsSolver;
 use nalgebra::{DMatrix, DVector};
 

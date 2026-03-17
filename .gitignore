@@ -45,4 +45,4 @@ feature_selection_bnb/*.so
 kingfisher/*.so
 
 # --- Data ---
-data/
+#data/

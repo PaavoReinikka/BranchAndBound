@@ -14,8 +14,8 @@ dependencies = [
 members = ["kingfisher", "feature_selection"]
 
 [tool.uv.sources]
-kingfisher-bnb = { workspace = true, editable = false }
-feature-selection-bnb = { workspace = true, editable = false }
+kingfisher-bnb = { workspace = true }
+feature-selection-bnb = { workspace = true }
 
 [dependency-groups]
 dev = [

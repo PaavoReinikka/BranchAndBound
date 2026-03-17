@@ -1,4 +1,4 @@
-use kingfisher_bnb::{KingfisherProblem, BitMatrix, Measures};
+use kingfisher_bnb_extension::{KingfisherProblem, BitMatrix, Measures};
 use branch_and_bound::solvers::BestFirstSolver;
 use bitvec::prelude::*;
 
