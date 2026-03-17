@@ -13,3 +13,7 @@ nalgebra = "0.32"
 bitvec = "1.0"
 rayon = "1.8"
 pyo3 = { version = "0.19", features = ["extension-module"] }
+
+[[example]]
+name = "simple_regression"
+path = "../examples/feature_selection/rust/simple_regression.rs"

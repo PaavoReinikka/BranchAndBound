@@ -8,3 +8,11 @@ rayon = "1.8"
 dashmap = { version = "5.5", features = ["rayon"] }
 parking_lot = "0.12"
 bitvec = "1.0"
+
+[[example]]
+name = "association_rules"
+path = "../examples/branch_and_bound/rust/association_rules.rs"
+
+[[example]]
+name = "association_rules_standalone"
+path = "../examples/branch_and_bound/rust/association_rules_standalone.rs"

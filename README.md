@@ -17,19 +17,61 @@ This framework provides a generalized implementation of the Branch and Bound opt
 ### Prerequisites
 - **Rust:** `cargo` and `rustc` (Edition 2021)
 - **Python:** 3.8+ and `uv` (recommended)
+- **Maturin:** `pip install maturin` (for Python extension development)
 
-### Clean Build
-To clean and rebuild the entire workspace (Rust core + Python extensions):
+### Build the Project
+
+To build the Rust core and prepare the Python extensions:
 
 ```bash
-# Clean previous artifacts
-cargo clean
-
-# Build all Rust components
+# 1. Build all Rust components
 cargo build --release
 
-# Setup Python environment and build extensions
+# 2. Setup Python environment
 uv sync
+
+# 3. Build and install Python extensions into the local environment
+# This is required for the Python examples to work correctly.
+cd kingfisher && uv run maturin develop && cd ..
+cd feature_selection && uv run maturin develop && cd ..
+```
+
+---
+
+## Examples
+
+All examples have been consolidated into the root `examples/` directory.
+
+### 1. Kingfisher (Rule Mining)
+
+**Rust CLI:**
+```bash
+cargo run -p kingfisher_bnb -- --data data/test_data.txt --cols 4 --t-type 3
+```
+
+**Python Example:**
+```bash
+uv run python examples/kingfisher/python/example.py
+```
+
+### 2. Feature Selection
+
+**Rust Example:**
+```bash
+cargo run --example simple_regression -p feature_selection
+```
+
+**Python Example:**
+```bash
+uv run python examples/feature_selection/python/example.py
+```
+
+### 3. Branch and Bound Core
+
+**Rust Examples:**
+```bash
+cargo run --example association_rules -p branch_and_bound
+cargo run --example association_rules_standalone -p branch_and_bound
 ```
 
 ---
@@ -37,33 +79,29 @@ uv sync
 ## Usage
 
 ### 1. Kingfisher (Rule Mining)
-
-**CLI:**
-```bash
-cargo run -p kingfisher_bnb -- --data data/test_data.txt --cols 4 --t-type 3
-```
-
-**Python:**
-```python
-import kingfisher_bnb
-rules = kingfisher_bnb.find_rules_from_data(data=my_sparse_data, k=10, q=100)
-```
-
+...
 ### 2. Feature Selection
-
-**Python (Scikit-Learn Interface):**
-```python
-from feature_selection_bnb import BranchAndBoundSelector
-selector = BranchAndBoundSelector(k_features=5, metric='bic')
-selector.fit(X, y)
-```
-
+...
 ---
 
 ## Testing
 Run all unit and integration tests across the workspace:
 ```bash
 cargo test
+```
+
+## Project Structure
+
+```text
+examples/
+├── kingfisher/
+│   ├── python/          # Python examples for Kingfisher
+│   └── rust/            # Rust tests/examples for Kingfisher
+├── feature_selection/
+│   ├── python/          # Python examples for Feature Selection
+│   └── rust/            # Rust examples for Feature Selection
+└── branch_and_bound/
+    └── rust/            # Core B&B algorithm examples
 ```
 
 ## Design Goals
