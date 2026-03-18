@@ -91,6 +91,15 @@ impl<S: SearchState, V: ObjectiveValue> ResultCollector<S, V> {
     }
 
     pub fn add(&self, state: S, value: V) {
+        // First check if the value is even better than the initial threshold
+        let is_valid = match self.goal {
+            OptimizationGoal::Maximize => value >= self.initial_threshold,
+            OptimizationGoal::Minimize => value <= self.initial_threshold,
+        };
+        if !is_valid {
+            return;
+        }
+
         let mut heap = self.results.write();
         if heap.len() < self.k {
             heap.push(HeapNode { node: ResultNode { state, value }, goal: self.goal });

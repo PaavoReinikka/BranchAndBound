@@ -52,8 +52,14 @@ fn find_best_features(
 
     let problem = FeatureProblem::new(x_mat, y_vec, m, max_features, lambda);
     
+    // Set appropriate initial threshold based on the optimization goal
+    let initial_threshold = match problem.goal() {
+        OptimizationGoal::Minimize => f64::INFINITY,
+        OptimizationGoal::Maximize => f64::NEG_INFINITY,
+    };
+    
     // We just want the single best one for the sklearn interface
-    let results = BfsSolver::search(&problem, 1, f64::INFINITY);
+    let results = BfsSolver::search(&problem, 1, initial_threshold);
     
     if let Some(best) = results.first() {
         Ok(best.state.active_indices.clone())

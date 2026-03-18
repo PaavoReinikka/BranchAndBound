@@ -1,5 +1,6 @@
 import kingfisher_bnb as kingfisher
 import math
+import random
 
 print("=== Kingfisher (New BnB) Python Example ===")
 
@@ -10,8 +11,15 @@ dense_data = [
     [1, 0, 0, 1], # Apple, Date
     [1, 1, 0, 1], # Apple, Banana, Date
     [0, 0, 0, 1], # Date
+    [0, 1, 0, 1], # Banana, Date
 ]
 column_names = ["Apple", "Banana", "Cherry", "Date"]
+
+# # append the data 4 times to increase the dataset size
+# dense_data = dense_data * 2
+# # randomly shuffle the data on both dimensions
+# random.shuffle(dense_data)
+# for row in dense_data:    random.shuffle(row)
 
 print("Transforming dense data to sparse...")
 sparse_data, id_to_name, name_to_id = kingfisher.dense_to_sparse(dense_data, column_names)
@@ -26,7 +34,7 @@ rules = kingfisher.find_rules_from_data(
     q=5,
     l_max=3,
     t_type=3, # Both positive and negative
-    m_threshold=1.0
+    m_threshold=1.0, # Minimum p-value (1.0 = return all)
 )
 
 print(f"\nFound {len(rules)} rules:")
@@ -36,4 +44,4 @@ for i, rule in enumerate(rules):
     cons_name = id_to_name[rule.consequent]
     sign = "" if not rule.is_negative else "NOT "
     p_val = math.exp(rule.measure_value)
-    print(f"Rule {i+1:>2}: IF {ant_str: <20} THEN {sign}{cons_name: <10} (p={p_val:.3e})")
+    print(f"Rule {i+1:>2}: IF {ant_str: <20} THEN {sign}{cons_name: <10} (p={p_val})")

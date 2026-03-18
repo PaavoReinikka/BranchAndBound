@@ -68,18 +68,29 @@ pub struct RuleSet {
     pub max_k: usize,
     pub rules: BinaryHeap<RuleEntry>,
     pub is_decreasing: bool,
+    pub initial_threshold: f64,
 }
 
 impl RuleSet {
-    pub fn new(max_k: usize, is_decreasing: bool) -> Self {
+    pub fn new(max_k: usize, is_decreasing: bool, initial_threshold: f64) -> Self {
         Self {
             max_k,
             rules: BinaryHeap::with_capacity(max_k + 1),
             is_decreasing,
+            initial_threshold,
         }
     }
 
     pub fn add(&mut self, rule: Rule) {
+        let is_valid = if self.is_decreasing {
+            rule.measure_value <= self.initial_threshold
+        } else {
+            rule.measure_value >= self.initial_threshold
+        };
+        if !is_valid {
+            return;
+        }
+
         let entry = RuleEntry { rule, is_decreasing: self.is_decreasing };
         if self.rules.len() < self.max_k {
             self.rules.push(entry);
@@ -92,7 +103,7 @@ impl RuleSet {
     }
 
     pub fn worst_value(&self) -> f64 {
-        self.rules.peek().map(|e| e.rule.measure_value).unwrap_or(if self.is_decreasing { f64::INFINITY } else { f64::NEG_INFINITY })
+        self.rules.peek().map(|e| e.rule.measure_value).unwrap_or(self.initial_threshold)
     }
 
     pub fn into_sorted_vec(self) -> Vec<Rule> {
@@ -266,12 +277,13 @@ pub struct KingfisherProblem {
     pub min_cf: f64,
     pub t_type: u8,
     pub measure_type: u8,
+    pub initial_threshold: f64,
     pub best_p_cache: DashMap<(Vec<usize>, usize, bool), f64>,
     pub ruleset: Arc<Mutex<RuleSet>>,
 }
 
 impl KingfisherProblem {
-    pub fn new(matrix: BitMatrix, measures: Measures, q: usize, l_max: usize, min_fr: usize, min_cf: f64, t_type: u8, measure_type: u8) -> Self {
+    pub fn new(matrix: BitMatrix, measures: Measures, q: usize, l_max: usize, min_fr: usize, min_cf: f64, t_type: u8, measure_type: u8, initial_threshold: f64) -> Self {
         let is_decreasing = measure_type == 1 || measure_type == 2;
         Self {
             matrix,
@@ -281,8 +293,9 @@ impl KingfisherProblem {
             min_cf,
             t_type,
             measure_type,
+            initial_threshold,
             best_p_cache: DashMap::new(),
-            ruleset: Arc::new(Mutex::new(RuleSet::new(q, is_decreasing))),
+            ruleset: Arc::new(Mutex::new(RuleSet::new(q, is_decreasing, initial_threshold))),
         }
     }
 
@@ -411,15 +424,13 @@ fn find_rules_from_data(
 ) -> PyResult<Vec<Rule>> {
     let matrix = BitMatrix::from_rows(data, k + 1);
     let measures = Measures::new(matrix.num_rows);
-    let problem = KingfisherProblem::new(matrix, measures, q, l_max, min_fr, min_cf, t_type, measure_type);
-    
     let transformed_threshold = if measure_type == 1 || measure_type == 2 { m_threshold.ln() } else { -m_threshold };
-    
+    let problem = KingfisherProblem::new(matrix, measures, q, l_max, min_fr, min_cf, t_type, measure_type, transformed_threshold);
+
     BestFirstSolver::search(&problem, q, transformed_threshold);
-    
+
     Ok(Arc::try_unwrap(problem.ruleset).unwrap().into_inner().unwrap().into_sorted_vec())
 }
-
 #[pymodule]
 fn kingfisher_bnb_extension(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(find_rules_from_data, m)?)?;
