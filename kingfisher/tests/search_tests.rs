@@ -33,8 +33,9 @@ fn test_kingfisher_min_fr_cf() {
         0.0,
         1,
         1,
+        0.0, // initial_threshold (ln(1.0))
     );
-    let res1 = BestFirstSolver::search(&problem1, 10, 1.0);
+    let res1 = BestFirstSolver::search(&problem1, 10, 0.0);
     assert_eq!(res1.len(), 0);
 
     // Case 2: high min_cf (0.9). 
@@ -48,8 +49,9 @@ fn test_kingfisher_min_fr_cf() {
         0.9,
         1,
         1,
+        0.0, // initial_threshold (ln(1.0))
     );
-    let res2 = BestFirstSolver::search(&problem2, 10, 1.0);
+    let res2 = BestFirstSolver::search(&problem2, 10, 0.0);
     assert!(res2.iter().any(|r| r.state.path.contains(&0) && r.state.path.contains(&1)));
 }
 
@@ -83,12 +85,25 @@ fn test_kingfisher_pruning_consistency() {
         0.0,
         1,
         1,
+        0.0, // initial_threshold (ln(1.0))
     );
     // ln(1.0) is 0.0, everything is valid
     let res_no_prune = BestFirstSolver::search(&problem, 50, 0.0);
 
     // Tight threshold ln(0.05)
-    let res_prune = BestFirstSolver::search(&problem, 50, 0.05f64.ln());
+    let threshold_prune = 0.05f64.ln();
+    let problem_prune = KingfisherProblem::new(
+        matrix.clone(),
+        measures.clone(),
+        50, // q
+        3,
+        1,
+        0.0,
+        1,
+        1,
+        threshold_prune,
+    );
+    let res_prune = BestFirstSolver::search(&problem_prune, 50, threshold_prune);
 
     assert!(res_prune.len() > 0);
     for r in &res_prune {

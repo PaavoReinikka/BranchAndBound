@@ -27,9 +27,21 @@ struct Args {
     #[arg(short = 'r', long, default_value_t = 3)]
     t_type: u8,
 
-    /// Significance threshold (alpha)
+    /// Significance threshold (alpha or min_measure)
     #[arg(short, long, default_value_t = 0.05)]
     alpha: f64,
+
+    /// Measure type: 1=Fisher's p-value (ln), 2=Fisher's p-value (ln), 3=Chi-squared, 4=Mutual Information, 5=Leverage
+    #[arg(short = 'M', long, default_value_t = 1)]
+    measure_type: u8,
+
+    /// Minimum frequency (min_fr)
+    #[arg(long, default_value_t = 1)]
+    min_fr: usize,
+
+    /// Minimum confidence (min_cf)
+    #[arg(long, default_value_t = 0.0)]
+    min_cf: f64,
 }
 
 fn main() {
@@ -42,15 +54,23 @@ fn main() {
 
     let matrix = BitMatrix::load_from_file(&args.data, args.cols).expect("Failed to load matrix");
     let n = matrix.num_rows;
+
+    let transformed_threshold = if args.measure_type == 1 || args.measure_type == 2 {
+        args.alpha.ln()
+    } else {
+        -args.alpha
+    };
+
     let problem = KingfisherProblem::new(
         matrix,
         Measures::new(n),
         args.top_k,
         args.max_len,
-        1,    // min_fr
-        0.0,  // min_cf
+        args.min_fr,
+        args.min_cf,
         args.t_type,
-        1,    // Fisher's p
+        args.measure_type,
+        transformed_threshold,
     );
 
     println!("Kingfisher Rule Mining");
@@ -58,13 +78,23 @@ fn main() {
     println!("Data: {}, Rows: {}, Cols: {}", args.data, n, problem.matrix.num_cols);
     println!("Goal: Find Top-{} rules (Length <= {}, Type: {})", args.top_k, args.max_len, 
         match args.t_type { 1 => "Pos", 2 => "Neg", _ => "Both" });
+    println!("Measure: {}, Threshold (transformed): {:.4}", 
+        match args.measure_type {
+            1 | 2 => "Fisher's p-value",
+            3 => "Chi-squared",
+            4 => "Mutual Information",
+            5 => "Leverage",
+            _ => "Unknown"
+        },
+        transformed_threshold
+    );
     println!("");
 
-    println!("{:<4} | {:<20} | {:<5} | {:<10} | {:<10}", "Rank", "Antecedent", "Type", "Consequent", "p_ln");
+    println!("{:<4} | {:<20} | {:<5} | {:<10} | {:<10}", "Rank", "Antecedent", "Type", "Consequent", "Value");
     println!("{:-<4}-|-{:-<20}-|-{:-<5}-|-{:-<10}-|-{:-<10}", "", "", "", "", "");
 
     // Using Best-First solver
-    BestFirstSolver::search(&problem, args.top_k, args.alpha.ln());
+    BestFirstSolver::search(&problem, args.top_k, transformed_threshold);
     
     // Extract and print rules
     let rules_mutex = Arc::try_unwrap(problem.ruleset)
