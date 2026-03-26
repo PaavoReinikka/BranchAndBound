@@ -42,6 +42,36 @@ struct Args {
     /// Minimum confidence (min_cf)
     #[arg(long, default_value_t = 0.0)]
     min_cf: f64,
+
+    /// Required consequents (comma-separated indices)
+    #[arg(long, value_delimiter = ',')]
+    required_consequents: Option<Vec<usize>>,
+
+    /// Excluded consequents (comma-separated indices)
+    #[arg(long, value_delimiter = ',')]
+    excluded_consequents: Option<Vec<usize>>,
+
+    /// Excluded attributes (comma-separated indices)
+    #[arg(long, value_delimiter = ',')]
+    excluded_attributes: Option<Vec<usize>>,
+
+    /// Compatibility constraints (comma-separated pairs A:B, meaning A in antecedent excludes B as consequent)
+    #[arg(long, value_delimiter = ',')]
+    constraints: Option<Vec<String>>,
+
+    /// Attributes that can only appear as consequents (comma-separated indices)
+    #[arg(long, value_delimiter = ',')]
+    consequent_only: Option<Vec<usize>>,
+}
+
+fn parse_pair(s: &str) -> Option<(usize, usize)> {
+    let parts: Vec<&str> = s.split(':').collect();
+    if parts.len() == 2 {
+        if let (Ok(a), Ok(b)) = (parts[0].parse(), parts[1].parse()) {
+            return Some((a, b));
+        }
+    }
+    None
 }
 
 fn main() {
@@ -61,6 +91,10 @@ fn main() {
         -args.alpha
     };
 
+    let constraints = args.constraints.map(|vec| {
+        vec.iter().filter_map(|s| parse_pair(s)).collect()
+    });
+
     let problem = KingfisherProblem::new(
         matrix,
         Measures::new(n),
@@ -71,6 +105,11 @@ fn main() {
         args.t_type,
         args.measure_type,
         transformed_threshold,
+        args.required_consequents,
+        args.excluded_consequents,
+        args.excluded_attributes,
+        constraints,
+        args.consequent_only,
     );
 
     println!("Kingfisher Rule Mining");

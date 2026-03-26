@@ -34,6 +34,11 @@ fn test_kingfisher_min_fr_cf() {
         1,
         1,
         0.0, // initial_threshold (ln(1.0))
+        None,
+        None,
+        None,
+        None,
+        None,
     );
     let res1 = BestFirstSolver::search(&problem1, 10, 0.0);
     assert_eq!(res1.len(), 0);
@@ -50,6 +55,11 @@ fn test_kingfisher_min_fr_cf() {
         1,
         1,
         0.0, // initial_threshold (ln(1.0))
+        None,
+        None,
+        None,
+        None,
+        None,
     );
     let res2 = BestFirstSolver::search(&problem2, 10, 0.0);
     assert!(res2.iter().any(|r| r.state.path.contains(&0) && r.state.path.contains(&1)));
@@ -86,6 +96,11 @@ fn test_kingfisher_pruning_consistency() {
         1,
         1,
         0.0, // initial_threshold (ln(1.0))
+        None,
+        None,
+        None,
+        None,
+        None,
     );
     // ln(1.0) is 0.0, everything is valid
     let res_no_prune = BestFirstSolver::search(&problem, 50, 0.0);
@@ -102,6 +117,11 @@ fn test_kingfisher_pruning_consistency() {
         1,
         1,
         threshold_prune,
+        None,
+        None,
+        None,
+        None,
+        None,
     );
     let res_prune = BestFirstSolver::search(&problem_prune, 50, threshold_prune);
 

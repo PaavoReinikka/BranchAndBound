@@ -7,9 +7,15 @@ This reproduction uses the `BranchAndBound` core with a **Best-First Search** st
 ## Features
 
 - **Optimal Search:** Uses a Priority Queue driven by optimistic bounds on the selected statistical measure (Fisher's p, Chi-squared, etc.).
-- **Multiple Measures:** Support for Fisher's Exact Test, Chi-squared, Mutual Information, and Leverage.
+- **Multiple Measures:** Support for Fisher's Exact Test (ln p), Chi-squared, Mutual Information, and Leverage.
 - **Both Rule Types:** Supports finding both **Positive** (IF A THEN B) and **Negative** (IF A THEN NOT B) dependency rules.
 - **Significance Filtering:** Automatically prunes redundant rules that are not more significant than all their parents.
+- **Advanced Filtering:** 
+  - **Required Consequents:** Find only rules leading to specific attributes.
+  - **Excluded Consequents:** Prevent certain attributes from being the result.
+  - **Excluded Attributes:** Remove attributes from the entire search space.
+  - **Compatibility Constraints:** Define specific (antecedent, consequent) pairs that are forbidden.
+  - **Consequent Only:** Mark attributes that can *only* appear as the result of a rule, not as causes.
 - **Dual Interface:** Full Command Line (CLI) and Python bindings.
 
 ## CLI Usage

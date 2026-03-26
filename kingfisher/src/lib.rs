@@ -72,26 +72,26 @@ pub struct RuleSet {
 }
 
 impl RuleSet {
-    pub fn new(max_k: usize, is_decreasing: bool, initial_threshold: f64) -> Self {
+    pub fn new(max_k: usize, _is_decreasing: bool, initial_threshold: f64) -> Self {
+        // Since all measures (including negated ones) are to be minimized,
+        // we always want the 'worst' (largest) value at the top of the heap.
         Self {
             max_k,
             rules: BinaryHeap::with_capacity(max_k + 1),
-            is_decreasing,
+            is_decreasing: true, 
             initial_threshold,
         }
     }
 
     pub fn add(&mut self, rule: Rule) {
-        let is_valid = if self.is_decreasing {
-            rule.measure_value <= self.initial_threshold
-        } else {
-            rule.measure_value >= self.initial_threshold
-        };
-        if !is_valid {
+        // All measures are transformed such that smaller is better.
+        // Fisher's p -> ln(p) (max 0.0)
+        // Others -> -Value (e.g., -Chi2)
+        if rule.measure_value > self.initial_threshold {
             return;
         }
 
-        let entry = RuleEntry { rule, is_decreasing: self.is_decreasing };
+        let entry = RuleEntry { rule, is_decreasing: true };
         if self.rules.len() < self.max_k {
             self.rules.push(entry);
         } else if let Some(worst) = self.rules.peek() {
@@ -280,10 +280,30 @@ pub struct KingfisherProblem {
     pub initial_threshold: f64,
     pub best_p_cache: DashMap<(Vec<usize>, usize, bool), f64>,
     pub ruleset: Arc<Mutex<RuleSet>>,
+    pub required_consequents: Option<Vec<usize>>,
+    pub excluded_consequents: Option<Vec<usize>>,
+    pub excluded_attributes: Option<Vec<usize>>,
+    pub constraints: Option<Vec<(usize, usize)>>,
+    pub consequent_only: Option<Vec<usize>>,
 }
 
 impl KingfisherProblem {
-    pub fn new(matrix: BitMatrix, measures: Measures, q: usize, l_max: usize, min_fr: usize, min_cf: f64, t_type: u8, measure_type: u8, initial_threshold: f64) -> Self {
+    pub fn new(
+        matrix: BitMatrix,
+        measures: Measures,
+        q: usize,
+        l_max: usize,
+        min_fr: usize,
+        min_cf: f64,
+        t_type: u8,
+        measure_type: u8,
+        initial_threshold: f64,
+        required_consequents: Option<Vec<usize>>,
+        excluded_consequents: Option<Vec<usize>>,
+        excluded_attributes: Option<Vec<usize>>,
+        constraints: Option<Vec<(usize, usize)>>,
+        consequent_only: Option<Vec<usize>>,
+    ) -> Self {
         let is_decreasing = measure_type == 1 || measure_type == 2;
         Self {
             matrix,
@@ -296,6 +316,11 @@ impl KingfisherProblem {
             initial_threshold,
             best_p_cache: DashMap::new(),
             ruleset: Arc::new(Mutex::new(RuleSet::new(q, is_decreasing, initial_threshold))),
+            required_consequents,
+            excluded_consequents,
+            excluded_attributes,
+            constraints,
+            consequent_only,
         }
     }
 
@@ -308,23 +333,73 @@ impl KingfisherProblem {
             _ => self.measures.ln_fishers_p(fr_xa, fr_x, fr_a, n),
         }
     }
+
+    fn is_excluded(&self, attr: usize) -> bool {
+        if let Some(ref excl) = self.excluded_attributes {
+            if excl.contains(&attr) { return true; }
+        }
+        false
+    }
+
+    fn is_consequent_only(&self, attr: usize) -> bool {
+        if let Some(ref co) = self.consequent_only {
+            if co.contains(&attr) { return true; }
+        }
+        false
+    }
+
+    fn is_constrained(&self, antecedent: &[usize], consequent: usize) -> bool {
+        if let Some(ref constr) = self.constraints {
+            for &ant_attr in antecedent {
+                // Check if pair (ant_attr, consequent) is in constraints
+                if constr.iter().any(|&(a, b)| a == ant_attr && b == consequent) {
+                    return true;
+                }
+            }
+        }
+        false
+    }
 }
 
 impl SearchProblem<KingfisherState, f64> for KingfisherProblem {
     fn root_states(&self) -> Vec<KingfisherState> {
-        (0..self.matrix.num_cols).map(|i| KingfisherState { path: vec![i], freq: self.matrix.attr_freqs[i] })
+        (0..self.matrix.num_cols)
+            .filter(|&i| !self.is_excluded(i))
+            // We can still start from a "consequent_only" attribute, 
+            // but it cannot be part of an antecedent later.
+            // Wait, if it's consequent_only, it can only be the ONE attribute being moved to consequent.
+            // If path has length 1, it will be the consequent in evaluate.
+            .map(|i| KingfisherState { path: vec![i], freq: self.matrix.attr_freqs[i] })
             .filter(|s| s.freq >= self.min_fr).collect()
     }
 
     fn branch(&self, state: &KingfisherState) -> Vec<KingfisherState> {
         if state.depth() >= self.l_max { return vec![]; }
+        
+        // If any attribute in the path is 'consequent_only', we can only branch if 
+        // that attribute is the only one (it will eventually become the consequent).
+        // Actually, in our Best-First Search, the path [A, B, C] evaluates ALL 
+        // rules where {A, B, C} is the set of items.
+        // If 'B' is consequent_only, it MUST be the consequent.
+        // If BOTH 'B' and 'C' are consequent_only, then [A, B, C] can never form a valid rule
+        // because one of them would have to be in the antecedent.
+        let co_count = state.path.iter().filter(|&&attr| self.is_consequent_only(attr)).count();
+        if co_count > 1 { return vec![]; }
+
         let last = *state.path.last().unwrap();
-        (last + 1..self.matrix.num_cols).map(|i| {
-            let mut new_path = state.path.clone();
-            new_path.push(i);
-            let freq = self.matrix.frequency(&new_path);
-            KingfisherState { path: new_path, freq }
-        }).filter(|s| s.freq >= self.min_fr).collect()
+        (last + 1..self.matrix.num_cols)
+            .filter(|&i| !self.is_excluded(i))
+            .filter(|&i| {
+                // If we already have a consequent_only attribute, we can't add another one.
+                if co_count > 0 && self.is_consequent_only(i) { return false; }
+                true
+            })
+            .map(|i| {
+                let mut new_path = state.path.clone();
+                new_path.push(i);
+                let freq = self.matrix.frequency(&new_path);
+                KingfisherState { path: new_path, freq }
+            }).filter(|s| s.freq >= self.min_fr).collect()
     }
 
     fn evaluate(&self, state: &KingfisherState) -> Option<f64> {
@@ -332,9 +407,28 @@ impl SearchProblem<KingfisherState, f64> for KingfisherProblem {
         let mut best_improvement = f64::INFINITY;
         
         for &consequent in &state.path {
+            // 1. Check if consequent is allowed
+            if let Some(ref req) = self.required_consequents {
+                if !req.contains(&consequent) { continue; }
+            }
+            if let Some(ref excl) = self.excluded_consequents {
+                if excl.contains(&consequent) { continue; }
+            }
+
             let mut antecedent = state.path.clone();
             antecedent.retain(|&x| x != consequent);
             if antecedent.is_empty() { continue; }
+
+            // 2. Check if any attribute in antecedent is "consequent_only"
+            if antecedent.iter().any(|&attr| self.is_consequent_only(attr)) {
+                continue;
+            }
+
+            // 3. Check compatibility constraints
+            if self.is_constrained(&antecedent, consequent) {
+                continue;
+            }
+
             let freq_x_ant = self.matrix.frequency(&antecedent);
             let freq_xa = state.freq;
             let freq_a = self.matrix.attr_freqs[consequent];
@@ -343,7 +437,7 @@ impl SearchProblem<KingfisherState, f64> for KingfisherProblem {
             if self.t_type == 1 || self.t_type == 3 {
                 if freq_xa as f64 / freq_x_ant as f64 >= self.min_cf {
                     let m = self.get_measure(freq_xa, freq_x_ant, freq_a, n);
-                    let mut p_best = f64::INFINITY;
+                    let mut p_best = 0.0; // p=1.0 for Fisher, value=0.0 for others (after negation)
                     for i in 0..antecedent.len() {
                         let mut p_ant = antecedent.clone(); p_ant.remove(i);
                         let mut p_full = p_ant; p_full.push(consequent); p_full.sort();
@@ -365,7 +459,7 @@ impl SearchProblem<KingfisherState, f64> for KingfisherProblem {
                 let freq_not_a = n - freq_a;
                 if freq_x_not_a as f64 / freq_x_ant as f64 >= self.min_cf {
                     let m = self.get_measure(freq_x_not_a, freq_x_ant, freq_not_a, n);
-                    let mut p_best = f64::INFINITY;
+                    let mut p_best = 0.0;
                     for i in 0..antecedent.len() {
                         let mut p_ant = antecedent.clone(); p_ant.remove(i);
                         let mut p_full = p_ant; p_full.push(consequent); p_full.sort();
@@ -410,7 +504,7 @@ impl SearchProblem<KingfisherState, f64> for KingfisherProblem {
 }
 
 #[pyfunction]
-#[pyo3(signature = (data, k, q=100, l_max=3, t_type=1, m_threshold=0.05, min_fr=1, min_cf=0.0, measure_type=1))]
+#[pyo3(signature = (data, k, q=100, l_max=3, t_type=1, m_threshold=0.05, min_fr=1, min_cf=0.0, measure_type=1, required_consequents=None, excluded_consequents=None, excluded_attributes=None, constraints=None, consequent_only=None))]
 fn find_rules_from_data(
     data: Vec<Vec<usize>>,
     k: usize,
@@ -421,11 +515,16 @@ fn find_rules_from_data(
     min_fr: usize,
     min_cf: f64,
     measure_type: u8,
+    required_consequents: Option<Vec<usize>>,
+    excluded_consequents: Option<Vec<usize>>,
+    excluded_attributes: Option<Vec<usize>>,
+    constraints: Option<Vec<(usize, usize)>>,
+    consequent_only: Option<Vec<usize>>,
 ) -> PyResult<Vec<Rule>> {
     let matrix = BitMatrix::from_rows(data, k + 1);
     let measures = Measures::new(matrix.num_rows);
     let transformed_threshold = if measure_type == 1 || measure_type == 2 { m_threshold.ln() } else { -m_threshold };
-    let problem = KingfisherProblem::new(matrix, measures, q, l_max, min_fr, min_cf, t_type, measure_type, transformed_threshold);
+    let problem = KingfisherProblem::new(matrix, measures, q, l_max, min_fr, min_cf, t_type, measure_type, transformed_threshold, required_consequents, excluded_consequents, excluded_attributes, constraints, consequent_only);
 
     BestFirstSolver::search(&problem, q, transformed_threshold);
 
