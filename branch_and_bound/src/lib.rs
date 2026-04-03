@@ -132,10 +132,8 @@ impl<S: SearchState, V: ObjectiveValue> ResultCollector<S, V> {
         while let Some(hn) = heap.pop() {
             res.push(hn.node);
         }
-        // heap.pop() on our HeapNode now gives the WORST of the top-K first.
-        // To get [best...worst], we just leave the results as collected and reversed.
-        // Wait, if pop() is worst, res is [worst, ..., best]. 
-        // We want [best, ..., worst], so we keep the reverse.
+        // res is [worst, ..., best]. 
+        // so we keep the reverse.
         res.reverse();
         res
     }
