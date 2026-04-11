@@ -2,6 +2,8 @@
 
 This framework provides a generalized implementation of the Branch and Bound optimization paradigm. It is designed to be extensible, allowing developers to plug in custom search problems while leveraging high-performance, parallel search strategies.
 
+**NOTE:** This is still very much a work in progress, and although the core BnB component is fairly robust the extensions are likely to be still somewhat fragile; the interfaces might still slightly evolve. New extensions and use cases will be added after I've had time to test the core properly.  
+
 ## Core Projects
 
 | Directory | Crate | Description |
